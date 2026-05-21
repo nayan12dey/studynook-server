@@ -1,6 +1,6 @@
 const express = require('express')
 const dotenv = require("dotenv")
-const { MongoClient, ServerApiVersion } = require('mongodb');
+const { MongoClient, ServerApiVersion, ObjectId } = require('mongodb');
 const cors = require("cors")
 dotenv.config()
 
@@ -30,8 +30,25 @@ async function run() {
     // Send a ping to confirm a successful connection
     // await client.db("admin").command({ ping: 1 });
 
+    const db = client.db("studynookdb")
+    const roomsCollection = db.collection("rooms")
 
-    
+    app.get("/rooms", async(req, res) => {
+        const cursor = roomsCollection.find()
+        const result = await cursor.toArray()
+        // console.log(result)
+        res.send(result)
+    })
+
+
+    app.get("/rooms/:id", async(req, res) => {
+
+        const {roomsId} = req.params;
+
+        const query = {_id: new ObjectId(id)}
+        const result = await roomsCollection.findOne(query)
+        res.send();
+    })
 
 
 

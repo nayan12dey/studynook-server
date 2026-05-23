@@ -33,22 +33,32 @@ async function run() {
     const db = client.db("studynookdb")
     const roomsCollection = db.collection("rooms")
 
-    app.get("/rooms", async(req, res) => {
-        const cursor = roomsCollection.find()
-        const result = await cursor.toArray()
-        // console.log(result)
-        res.send(result)
+    app.get("/rooms", async (req, res) => {
+      const cursor = roomsCollection.find()
+      const result = await cursor.toArray()
+      // console.log(result)
+      res.send(result)
     })
 
 
-    app.get("/rooms/:id", async(req, res) => {
-
-        const {roomsId} = req.params;
-
-        const query = {_id: new ObjectId(id)}
-        const result = await roomsCollection.findOne(query)
-        res.send();
+    app.get("/availablerooms", async (req, res) => {
+      const cursor = roomsCollection.find().limit(6)
+      const result = await cursor.toArray()
+      res.send(result)
     })
+
+
+    app.get("/rooms/:roomsId", async (req, res) => {
+
+      const { roomsId } = req.params;
+
+      const query = { _id: new ObjectId(roomsId) }
+      const result = await roomsCollection.findOne(query)
+      res.send(result);
+    })
+
+
+
 
 
 

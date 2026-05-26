@@ -12,7 +12,7 @@ const port = process.env.PORT
 
 
 
-const uri = "mongodb+srv://studynook:2sXmWhXEAY45Hv32@cluster0.ntlc6hk.mongodb.net/?appName=Cluster0";
+const uri = process.env.MONGODB_URI
 
 // Create a MongoClient with a MongoClientOptions object to set the Stable API version
 const client = new MongoClient(uri, {
@@ -23,67 +23,79 @@ const client = new MongoClient(uri, {
   }
 });
 
-async function run() {
-  try {
-    // Connect the client to the server	(optional starting in v4.7)
-    await client.connect();
-    // Send a ping to confirm a successful connection
-    // await client.db("admin").command({ ping: 1 });
 
-    const db = client.db("studynookdb")
-    const roomsCollection = db.collection("rooms")
-
-    app.get("/rooms", async (req, res) => {
-      const cursor = roomsCollection.find()
-      const result = await cursor.toArray()
-      // console.log(result)
-      res.send(result)
-    })
-
-
-    app.get("/availablerooms", async (req, res) => {
-      const cursor = roomsCollection.find().limit(6)
-      const result = await cursor.toArray()
-      res.send(result)
-    })
-
-
-    app.get("/rooms/:roomsId", async (req, res) => {
-
-      const { roomsId } = req.params;
-
-      const query = { _id: new ObjectId(roomsId) }
-      const result = await roomsCollection.findOne(query)
-      res.send(result);
-    })
-
-
-
-
-
-
-
-
-
-    console.log("Pinged your deployment. You successfully connected to MongoDB!");
-  } finally {
-    // Ensures that the client will close when you finish/error
-    // await client.close();
-  }
+const logger = (req, res, next) => {
+  console.log(`${req.method} | ${req.url}`)
+  next()
 }
-run().catch(console.dir);
 
 
 
 
-app.get('/', (req, res) => {
-  res.send('Hello World!')
-})
 
 
-app.listen(port, () => {
-  console.log(`Example app listening on port ${port}`)
-})
+
+  async function run() {
+    try {
+      // Connect the client to the server	(optional starting in v4.7)
+      await client.connect();
+      // Send a ping to confirm a successful connection
+      // await client.db("admin").command({ ping: 1 });
+
+      const db = client.db("studynookdb")
+      const roomsCollection = db.collection("rooms")
+
+      app.get("/rooms", async (req, res) => {
+        const cursor = roomsCollection.find()
+        const result = await cursor.toArray()
+        // console.log(result)
+        res.send(result)
+      })
+
+
+      app.get("/availablerooms", async (req, res) => {
+        const cursor = roomsCollection.find().sort({ _id: -1 }).limit(6)
+        const result = await cursor.toArray()
+        res.send(result)
+      })
+
+
+      app.get("/rooms/:roomsId", logger, async (req, res) => {
+
+        const { roomsId } = req.params;
+
+        const query = { _id: new ObjectId(roomsId) }
+        const result = await roomsCollection.findOne(query)
+        res.send(result);
+      })
+
+
+
+
+
+
+
+
+
+      console.log("Pinged your deployment. You successfully connected to MongoDB!");
+    } finally {
+      // Ensures that the client will close when you finish/error
+      // await client.close();
+    }
+  }
+  run().catch(console.dir);
+
+
+
+
+  app.get('/', (req, res) => {
+    res.send('Hello World!')
+  })
+
+
+  app.listen(port, () => {
+    console.log(`Example app listening on port ${port}`)
+  })
 
 
 

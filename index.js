@@ -7,6 +7,7 @@ dotenv.config()
 
 const app = express()
 app.use(cors())
+app.use(express.json())
 
 const port = process.env.PORT
 
@@ -75,8 +76,6 @@ const verifyToken = async (req, res, next) => {
 
 
 
-
-
 async function run() {
   try {
     // Connect the client to the server	(optional starting in v4.7)
@@ -93,7 +92,7 @@ async function run() {
 
       let cursor
       if (search) {
-        cursor = roomsCollection.find({ room_name: search })
+        cursor = roomsCollection.find({ room_name: { $eq: search } })
       }
       else {
         cursor = roomsCollection.find()
@@ -129,6 +128,16 @@ async function run() {
     })
 
 
+    // database for add rooms
+    
+
+    app.post("/add-room", async(req, res) => {
+      const roomData = req.body
+      console.log(roomData)
+      const result = await roomsCollection.insertOne(roomData)
+      res.send(result)    
+  
+    })
 
 
 

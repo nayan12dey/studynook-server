@@ -116,7 +116,7 @@ async function run() {
     })
 
 
-    app.get("/rooms/:roomsId", logger,  async (req, res) => {
+    app.get("/rooms/:roomsId", logger, verifyToken , async (req, res) => {
 
       console.log(req.user, "req")
 
@@ -142,6 +142,15 @@ async function run() {
       res.send(result)
 
 
+    })
+
+    // delete room details
+    app.delete("/rooms/:roomsId", async(req, res) => {
+
+      const { roomsId } = req.params
+      const result = await roomsCollection.deleteOne({_id: new ObjectId(roomsId)})
+
+      res.send(result);
 
     })
 

@@ -116,7 +116,7 @@ async function run() {
     })
 
 
-    app.get("/rooms/:roomsId", logger, verifyToken, async (req, res) => {
+    app.get("/rooms/:roomsId", logger,  async (req, res) => {
 
       console.log(req.user, "req")
 
@@ -128,15 +128,31 @@ async function run() {
     })
 
 
-    // database for add rooms
-    
+    // update room details
+    app.patch("/rooms/:roomsId", async (req, res) => {
 
-    app.post("/add-room", async(req, res) => {
+      const { roomsId } = req.params
+      const updatedData = req.body
+
+      const result = await roomsCollection.updateOne(
+        {_id: new ObjectId(roomsId)},
+        {$set: updatedData}
+      )
+
+      res.send(result)
+
+
+
+    })
+
+
+    // database for add rooms
+    app.post("/add-room", async (req, res) => {
       const roomData = req.body
       console.log(roomData)
       const result = await roomsCollection.insertOne(roomData)
-      res.send(result)    
-  
+      res.send(result)
+
     })
 
 

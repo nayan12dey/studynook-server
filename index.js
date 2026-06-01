@@ -85,6 +85,7 @@ async function run() {
 
     const db = client.db("studynookdb")
     const roomsCollection = db.collection("rooms")
+    const bookingCollection = db.collection("bookings")
 
     app.get("/rooms", async (req, res) => {
 
@@ -160,6 +161,14 @@ async function run() {
       const roomData = req.body
       console.log(roomData)
       const result = await roomsCollection.insertOne(roomData)
+      res.send(result)
+
+    })
+
+    // for storing booking data
+    app.post("/booking", async(req, res) => {
+      const bookingData = req.body
+      const result = await bookingCollection.insertOne(bookingData)
       res.send(result)
 
     })

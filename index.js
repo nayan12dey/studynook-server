@@ -117,7 +117,7 @@ async function run() {
     })
 
 
-    app.get("/rooms/:roomsId", logger, verifyToken , async (req, res) => {
+    app.get("/rooms/:roomsId", logger, verifyToken, async (req, res) => {
 
       console.log(req.user, "req")
 
@@ -136,8 +136,8 @@ async function run() {
       const updatedData = req.body
 
       const result = await roomsCollection.updateOne(
-        {_id: new ObjectId(roomsId)},
-        {$set: updatedData}
+        { _id: new ObjectId(roomsId) },
+        { $set: updatedData }
       )
 
       res.send(result)
@@ -146,10 +146,10 @@ async function run() {
     })
 
     // delete room details
-    app.delete("/rooms/:roomsId", async(req, res) => {
+    app.delete("/rooms/:roomsId", async (req, res) => {
 
       const { roomsId } = req.params
-      const result = await roomsCollection.deleteOne({_id: new ObjectId(roomsId)})
+      const result = await roomsCollection.deleteOne({ _id: new ObjectId(roomsId) })
 
       res.send(result);
 
@@ -166,13 +166,37 @@ async function run() {
     })
 
     // for storing booking data
-    app.post("/booking", async(req, res) => {
+    app.post("/booking", async (req, res) => {
       const bookingData = req.body
-      const result = await bookingCollection.insertOne(bookingData)
+      const newBookingData = {
+        ...bookingData,
+        status: "confirmed",
+        createdAt: new Date()
+      }
+
+      const result = await bookingCollection.insertOne(newBookingData)
       res.send(result)
 
     })
 
+    // for getting booking data
+    app.get("/booking/:userId", async (req, res) => {
+      const { userId } = req.params
+      const result = await bookingCollection.find({ userId: userId }).toArray()
+      res.send(result)
+
+    })
+
+    // for deleting booking data
+    app.patch("/booking/:bookingId", async (req, res) => {
+      const { bookingId } = req.params;
+      const result = await bookingCollection.updateOne(
+        { _id: new ObjectId(bookingId) },
+        {$set:{status: "cancelled"}}
+      )
+
+      res.send(result)
+    })
 
 
 

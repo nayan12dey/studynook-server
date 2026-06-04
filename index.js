@@ -59,8 +59,6 @@ const verifyToken = async (req, res, next) => {
     const { payload } = await jwtVerify(token, JWKS)
     req.user = payload;
 
-
-
     next()
 
   } catch (error) {
@@ -93,7 +91,12 @@ async function run() {
 
       let cursor
       if (search) {
-        cursor = roomsCollection.find({ room_name: { $eq: search } })
+        cursor = roomsCollection.find({
+          room_name: {
+              $regex: search,
+              $options: "i"
+          }
+        })
       }
       else {
         cursor = roomsCollection.find()
@@ -130,7 +133,7 @@ async function run() {
 
 
     // update room details
-    app.patch("/rooms/:roomsId", async (req, res) => {
+    app.patch("/rooms/:roomsId", verifyToken, async (req, res) => {
 
       const { roomsId } = req.params
       const updatedData = req.body
@@ -146,7 +149,7 @@ async function run() {
     })
 
     // delete room details
-    app.delete("/rooms/:roomsId", async (req, res) => {
+    app.delete("/rooms/:roomsId", verifyToken, async (req, res) => {
 
       const { roomsId } = req.params
       const result = await roomsCollection.deleteOne({ _id: new ObjectId(roomsId) })
@@ -157,7 +160,7 @@ async function run() {
 
 
     // database for add rooms
-    app.post("/add-room", async (req, res) => {
+    app.post("/add-room", verifyToken, async (req, res) => {
       const roomData = req.body
       console.log(roomData)
       const result = await roomsCollection.insertOne(roomData)
@@ -166,7 +169,7 @@ async function run() {
     })
 
     // for storing booking data
-    app.post("/booking", async (req, res) => {
+    app.post("/booking", verifyToken, async (req, res) => {
       const bookingData = req.body
       const newBookingData = {
         ...bookingData,
@@ -180,7 +183,7 @@ async function run() {
     })
 
     // for getting booking data
-    app.get("/booking/:userId", async (req, res) => {
+    app.get("/booking/:userId", verifyToken, async (req, res) => {
       const { userId } = req.params
       const result = await bookingCollection.find({ userId: userId }).toArray()
       res.send(result)
@@ -188,11 +191,11 @@ async function run() {
     })
 
     // for deleting booking data
-    app.patch("/booking/:bookingId", async (req, res) => {
+    app.patch("/booking/:bookingId", verifyToken, async (req, res) => {
       const { bookingId } = req.params;
       const result = await bookingCollection.updateOne(
         { _id: new ObjectId(bookingId) },
-        {$set:{status: "cancelled"}}
+        { $set: { status: "cancelled" } }
       )
 
       res.send(result)

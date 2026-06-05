@@ -85,32 +85,72 @@ async function run() {
     const roomsCollection = db.collection("rooms")
     const bookingCollection = db.collection("bookings")
 
+    // app.get("/rooms", async (req, res) => {
+
+    //   const { search, amenities } = req.query;
+
+    //   let cursor
+    //   if (search) {
+    //     cursor = roomsCollection.find({
+    //       room_name: {
+    //         $regex: search,
+    //         $options: "i"
+    //       }
+    //     })
+    //   }
+
+    //   if (amenities) {
+    //     query.amenities = {
+    //       $in: [amenities],
+    //     };
+    //   }
+
+
+    //   else {
+    //     cursor = roomsCollection.find()
+
+    //   }
+
+
+
+
+    //   const result = await cursor.toArray()
+    //   console.log(result)
+
+
+    //   // console.log(result)
+    //   res.send(result)
+    // })
+
+
+
     app.get("/rooms", async (req, res) => {
+      const { search, amenities } = req.query;
 
-      const { search } = req.query;
+      let query = {};
 
-      let cursor
+  
       if (search) {
-        cursor = roomsCollection.find({
-          room_name: {
-              $regex: search,
-              $options: "i"
-          }
-        })
-      }
-      else {
-        cursor = roomsCollection.find()
-
+        query.room_name = {
+          $regex: search,
+          $options: "i",
+        };
       }
 
+  
+      if (amenities) {
+        const amenitiesArray = amenities.split(",");
 
-      const result = await cursor.toArray()
-      console.log(result)
+        query.amenities = {
+          $in: amenitiesArray,
+        };
+      }
 
+      const result = await roomsCollection.find(query).toArray();
 
-      // console.log(result)
-      res.send(result)
-    })
+      res.send(result);
+    });
+
 
 
     app.get("/availablerooms", async (req, res) => {
@@ -130,6 +170,7 @@ async function run() {
       const result = await roomsCollection.findOne(query)
       res.send(result);
     })
+
 
 
     // update room details

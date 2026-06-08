@@ -16,7 +16,9 @@ const port = process.env.PORT
 
 const uri = process.env.MONGODB_URI
 
-const JWKS = createRemoteJWKSet(new URL(`${process.env.CLIENT_URL}/api/auth/jwks`))
+const JWKS = createRemoteJWKSet(
+  new URL(`${process.env.CLIENT_URL}/api/auth/jwks`)
+)
 
 console.log("JWKS", JWKS)
 
@@ -44,7 +46,7 @@ const verifyToken = async (req, res, next) => {
   // console.log(req.headers)
 
   const token = authorization?.split(" ")[1]
-  // console.log(token)
+  console.log(token)
 
 
 
@@ -65,7 +67,6 @@ const verifyToken = async (req, res, next) => {
     console.error('Token validation failed:', error)
     return res.status(401).json({ message: "Unauthorized" })
   }
-
 
 
 }
@@ -129,7 +130,7 @@ async function run() {
 
       let query = {};
 
-  
+
       if (search) {
         query.room_name = {
           $regex: search,
@@ -137,7 +138,7 @@ async function run() {
         };
       }
 
-  
+
       if (amenities) {
         const amenitiesArray = amenities.split(",");
 
@@ -170,6 +171,24 @@ async function run() {
       const result = await roomsCollection.findOne(query)
       res.send(result);
     })
+
+
+    // my listings
+    app.get("/my-listings/:email",verifyToken, async (req, res) => {
+      const { email } = req.params;
+
+      console.log(email)
+  
+      if (req.user.email !== email) {
+        return res.status(401).send({
+          message: "Unauthorized"
+        });
+      }
+
+      const result = await roomsCollection.find({ ownerEmail: email }).toArray();
+
+      res.send(result);
+    });
 
 
 
@@ -209,9 +228,36 @@ async function run() {
 
     })
 
-    // for storing booking data
-    app.post("/booking", verifyToken, async (req, res) => {
+    // for storing booking data and checking booking conflict
+    app.post("/booking", async (req, res) => {
       const bookingData = req.body
+
+      const {
+        room_name,
+        bookingDate,
+        startTime,
+        endTime
+      } = bookingData;
+
+      // const conflict = await bookingCollection.findOne({
+      //   room_name,
+      //   bookingDate,
+      //   status: "confirmed",
+
+      //   startHour: { $lte: endHour },
+      //   endHour: { $gte: startHour }
+
+      // });
+
+      // if (conflict) {
+      //   return res.status(400).send({
+      //     success: false,
+      //     message: "This room is already booked for this time slot"
+      //   })
+      // }
+
+
+
       const newBookingData = {
         ...bookingData,
         status: "confirmed",
@@ -223,8 +269,9 @@ async function run() {
 
     })
 
+
     // for getting booking data
-    app.get("/booking/:userId", verifyToken, async (req, res) => {
+    app.get("/booking/:userId",verifyToken, async (req, res) => {
       const { userId } = req.params
       const result = await bookingCollection.find({ userId: userId }).toArray()
       res.send(result)
@@ -232,7 +279,7 @@ async function run() {
     })
 
     // for deleting booking data
-    app.patch("/booking/:bookingId", verifyToken, async (req, res) => {
+    app.patch("/booking/:bookingId", async (req, res) => {
       const { bookingId } = req.params;
       const result = await bookingCollection.updateOne(
         { _id: new ObjectId(bookingId) },

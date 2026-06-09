@@ -161,7 +161,7 @@ async function run() {
     })
 
 
-    app.get("/rooms/:roomsId",verifyToken, async (req, res) => {
+    app.get("/rooms/:roomsId", verifyToken, async (req, res) => {
 
       console.log(req.user, "req")
 
@@ -176,11 +176,11 @@ async function run() {
 
 
     // my listings
-    app.get("/my-listings/:email",verifyToken, async (req, res) => {
+    app.get("/my-listings/:email", verifyToken, async (req, res) => {
       const { email } = req.params;
 
       console.log(email)
-  
+
       if (req.user.email !== email) {
         return res.status(401).send({
           message: "Unauthorized"
@@ -195,7 +195,7 @@ async function run() {
 
 
     // update room details
-    app.patch("/rooms/:roomsId",verifyToken, async (req, res) => {
+    app.patch("/rooms/:roomsId", verifyToken, async (req, res) => {
 
       const { roomsId } = req.params
       const updatedData = req.body
@@ -223,7 +223,10 @@ async function run() {
 
     // database for add rooms
     app.post("/add-room", verifyToken, async (req, res) => {
-      const roomData = req.body
+      const roomData = {
+        ...req.body,
+        bookingCount: 0
+      }
       console.log(roomData)
       const result = await roomsCollection.insertOne(roomData)
       res.send(result)
@@ -267,13 +270,21 @@ async function run() {
       }
 
       const result = await bookingCollection.insertOne(newBookingData)
+      await roomsCollection.updateOne(
+        { _id: new ObjectId(bookingData.roomId) },
+        {
+          $inc: {
+            bookingCount: 1
+          }
+        }
+      )
       res.send(result)
 
     })
 
 
     // for getting booking data
-    app.get("/booking/:userId",verifyToken, async (req, res) => {
+    app.get("/booking/:userId", verifyToken, async (req, res) => {
       const { userId } = req.params
       const result = await bookingCollection.find({ userId: userId }).toArray()
       res.send(result)
@@ -281,7 +292,7 @@ async function run() {
     })
 
     // for deleting booking data
-    app.patch("/booking/:bookingId",verifyToken, async (req, res) => {
+    app.patch("/booking/:bookingId", verifyToken, async (req, res) => {
       const { bookingId } = req.params;
       console.log(bookingId)
       const result = await bookingCollection.updateOne(

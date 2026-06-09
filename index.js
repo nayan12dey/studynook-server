@@ -161,11 +161,13 @@ async function run() {
     })
 
 
-    app.get("/rooms/:roomsId", logger, verifyToken, async (req, res) => {
+    app.get("/rooms/:roomsId",verifyToken, async (req, res) => {
 
       console.log(req.user, "req")
 
       const { roomsId } = req.params;
+
+      console.log(roomsId, `rooms from room details`)
 
       const query = { _id: new ObjectId(roomsId) }
       const result = await roomsCollection.findOne(query)
@@ -193,7 +195,7 @@ async function run() {
 
 
     // update room details
-    app.patch("/rooms/:roomsId", verifyToken, async (req, res) => {
+    app.patch("/rooms/:roomsId",verifyToken, async (req, res) => {
 
       const { roomsId } = req.params
       const updatedData = req.body
@@ -239,22 +241,22 @@ async function run() {
         endTime
       } = bookingData;
 
-      // const conflict = await bookingCollection.findOne({
-      //   room_name,
-      //   bookingDate,
-      //   status: "confirmed",
+      const conflict = await bookingCollection.findOne({
+        room_name,
+        bookingDate,
+        status: "confirmed",
 
-      //   startHour: { $lte: endHour },
-      //   endHour: { $gte: startHour }
+        startTime: { $lte: endTime },
+        endTime: { $gte: startTime }
 
-      // });
+      });
 
-      // if (conflict) {
-      //   return res.status(400).send({
-      //     success: false,
-      //     message: "This room is already booked for this time slot"
-      //   })
-      // }
+      if (conflict) {
+        return res.status(400).send({
+          success: false,
+          message: "This room is already booked for this time slot"
+        })
+      }
 
 
 
@@ -279,8 +281,9 @@ async function run() {
     })
 
     // for deleting booking data
-    app.patch("/booking/:bookingId", async (req, res) => {
+    app.patch("/booking/:bookingId",verifyToken, async (req, res) => {
       const { bookingId } = req.params;
+      console.log(bookingId)
       const result = await bookingCollection.updateOne(
         { _id: new ObjectId(bookingId) },
         { $set: { status: "cancelled" } }
